@@ -1,0 +1,847 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<base target="_top">
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	
+	<title>TGBC Find Us</title>
+	
+	<link rel="shortcut icon" type="image/x-icon" href="https://assets.nationbuilder.com/tgbc/sites/1/favicon_images/original/Group_115.png?1685682983" />
+
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+
+	<style>
+		html, body {
+			height: 100%;
+			margin: 0;
+		}
+		.leaflet-container {
+			height: 400px;
+			width: 600px;
+			max-width: 100%;
+			max-height: 100%;
+		}
+	</style>
+<button onclick="getLocation()">Get closest chapter</button>
+<p id="closest_chapter"></p>
+</head>
+<body>
+
+
+
+<div id="map" style="width: 600px; height: 400px;"></div>
+<script>
+const closestChapter = document.getElementById("closest_chapter");
+// Centre the map around Cobar (central NSW)
+const map = L.map('map').setView([-31.948946, 145.506354], 5);
+
+const tiles = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+	maxZoom: 19,
+	attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+}).addTo(map);
+
+var tgbcIcon = L.icon({
+	iconUrl: 'https://assets.nationbuilder.com/tgbc/sites/1/favicon_images/original/Group_115.png?1685682983',
+	iconSize: [30, 30]
+});
+
+const tgbcChapters = [
+	{
+		"state": "AUSTRALIAN CAPITAL TERRITORY",
+		"chapter": "CANBERRA",
+		"location": "King O'Malley's",
+		"address": "131 City Walk, Canberra ACT 2601",
+		"latitude": -35.2783652,
+		"longitude": 149.1310327
+	},
+	{
+		"state": "AUSTRALIAN CAPITAL TERRITORY",
+		"chapter": "CANBERRA NORTH",
+		"location": "Cypher Brewing Co",
+		"address": "Unit 3/35 Hinder St, Gungahlin ACT 2912",
+		"latitude": -35.1861056,
+		"longitude": 149.1376555
+	},
+	{
+		"state": "NEW SOUTH WALES",
+		"chapter": "ARMIDALE",
+		"location": "New England Hotel",
+		"address": "196 Beardy St, Armidale NSW 2350",
+		"latitude": -30.5134896,
+		"longitude": 151.665432
+	},
+	{
+		"state": "NEW SOUTH WALES",
+		"chapter": "CHATSWOOD",
+		"location": "The Great Northern Hotel",
+		"address": "522 Pacific Hwy, Chatswood NSW 2067",
+		"latitude": -33.8053112,
+		"longitude": 151.1791401
+	},
+	{
+		"state": "NEW SOUTH WALES",
+		"chapter": "COFFS HARBOUR",
+		"location": "Toormina Hotel",
+		"address": "13 Minorca Pl, Toormina NSW 2452",
+		"latitude": -30.3530363,
+		"longitude": 153.0912249
+	},
+	{
+		"state": "NEW SOUTH WALES",
+		"chapter": "DUBBO",
+		"location": "The Commercial Hotel",
+		"address": "161 Brisbane St, Dubbo NSW 2830",
+		"latitude": -32.2482173,
+		"longitude": 148.6034718
+	},
+	{
+		"state": "NEW SOUTH WALES",
+		"chapter": "DUDLEY",
+		"location": "Royal Crown Hotel",
+		"address": "94 Ocean St, Dudley NSW 2290",
+		"latitude": -32.9898662,
+		"longitude": 151.7199761
+	},
+	{
+		"state": "NEW SOUTH WALES",
+		"chapter": "GOSFORD",
+		"location": "Hotel Gosford",
+		"address": "179 Mann St, Gosford NSW 2250",
+		"latitude": -33.4248433,
+		"longitude": 151.342544
+	},
+	{
+		"state": "NEW SOUTH WALES",
+		"chapter": "KENSINGTON",
+		"location": "The Doncaster Hotel",
+		"address": "268 Anzac Parade, Kensington, NSW, 2033",
+		"latitude": -33.9127194,
+		"longitude": 151.22465
+	},
+	{
+		"state": "NEW SOUTH WALES",
+		"chapter": "LEICHHARDT",
+		"location": "The Royal Leichhardt",
+		"address": "156 Norton St, Leichhardt NSW 2040",
+		"latitude": -33.8820076,
+		"longitude": 151.1566561
+	},
+	{
+		"state": "NEW SOUTH WALES",
+		"chapter": "LISMORE",
+		"location": "Sherwood Hotel",
+		"address": "75 Molesworth St, Lismore NSW 2480",
+		"latitude": -35.2783555,
+		"longitude": 149.131062
+	},
+	{
+		"state": "NEW SOUTH WALES",
+		"chapter": "MANLY",
+		"location": "Ivanhoe Hotel",
+		"address": "27 The Corso, Manly NSW 2095",
+		"latitude": -33.7980055,
+		"longitude": 151.2835734
+	},
+	{
+		"state": "NEW SOUTH WALES",
+		"chapter": "MAYFIELD",
+		"location": "Stag and Hunter Hotel",
+		"address": "187 Maitland Road, Mayfield NSW 2304",
+		"latitude": -32.8973172,
+		"longitude": 151.7341965
+	},
+	{
+		"state": "NEW SOUTH WALES",
+		"chapter": "NEWCASTLE",
+		"location": "The Blind Monk",
+		"address": "76 Beaumont St, Hamilton NSW 2303",
+		"latitude": -32.92151,
+		"longitude": 151.747234
+	},
+	{
+		"state": "NEW SOUTH WALES",
+		"chapter": "NEWCASTLE EAST",
+		"location": "The Grand Hotel",
+		"address": "32 Church St, Newcastle NSW 2300",
+		"latitude": -32.929835,
+		"longitude": 151.782534
+	},
+	{
+		"state": "NEW SOUTH WALES",
+		"chapter": "NEWTOWN",
+		"location": "The Newtown Hotel",
+		"address": "174 King St, Newtown NSW 2042",
+		"latitude": -33.8942051,
+		"longitude": 151.1828452
+	},
+	{
+		"state": "NEW SOUTH WALES",
+		"chapter": "PENRITH",
+		"location": "Red Cow Hotel",
+		"address": "9 Station St, Penrith NSW 2750",
+		"latitude": -33.7509082,
+		"longitude": 150.6955275
+	},
+	{
+		"state": "NEW SOUTH WALES",
+		"chapter": "PORT MACQUARIE",
+		"location": "Finnian's Irish Tavern",
+		"address": "97 Gordon St, Port Macquarie NSW 2444",
+		"latitude": -31.434152,
+		"longitude": 152.907549
+	},
+	{
+		"state": "NEW SOUTH WALES",
+		"chapter": "SUTHERLAND",
+		"location": "Union Place Hotel",
+		"address": "34 Railway Crescent Jannali, NSW, Australia 2226",
+		"latitude": -34.0147873,
+		"longitude": 151.0650426
+	},
+	{
+		"state": "NEW SOUTH WALES",
+		"chapter": "SYDNEY CITY",
+		"location": "Shakespeare Hotel",
+		"address": "200 Devonshire St, Surry Hills NSW 2010",
+		"latitude": -33.887521,
+		"longitude": 151.211161
+	},
+	{
+		"state": "NEW SOUTH WALES",
+		"chapter": "TAMWORTH",
+		"location": "Tamworth Hotel",
+		"address": "147 Marius St, Tamworth NSW 2340",
+		"latitude": -31.088044,
+		"longitude": 150.9301867
+	},
+	{
+		"state": "NEW SOUTH WALES",
+		"chapter": "WOLLONGONG",
+		"location": "Headlands Hotel Austinmer Beach",
+		"address": "Headland Ave & Yuruga St, Austinmer NSW 2515",
+		"latitude": -34.3014425,
+		"longitude": 150.9403769
+	},
+	{
+		"state": "NORTHERN TERRITORY",
+		"chapter": "DARWIN",
+		"location": "Parap Tavern",
+		"address": "15 Parap Rd, Parap NT 0820",
+		"latitude": -12.4334386,
+		"longitude": 130.843134
+	},
+	{
+		"state": "QUEENSLAND",
+		"chapter": "ASHGROVE",
+		"location": "Hope & Anchor",
+		"address": "267 Given Terrace, Paddington QLD 4064",
+		"latitude": -27.4608104,
+		"longitude": 153.0040539
+	},
+	{
+		"state": "QUEENSLAND",
+		"chapter": "GLADSTONE",
+		"location": "Ward's Brewery",
+		"address": "131 Auckland St, Gladstone Central QLD 4680",
+		"latitude": -23.8458485,
+		"longitude": 151.2596117
+	},
+	{
+		"state": "QUEENSLAND",
+		"chapter": "GOLD COAST",
+		"location": "D'Arcy Arms",
+		"address": "2923 Gold Coast Hwy, Surfers Paradise QLD 4217",
+		"latitude": -28.0120655,
+		"longitude": 153.4298647
+	},
+	{
+		"state": "QUEENSLAND",
+		"chapter": "KANGAROO POINT",
+		"location": "The Lawn Bar + Café",
+		"address": "44 Ferry St, Kangaroo Point QLD 4169",
+		"latitude": -27.4722441,
+		"longitude": 153.0357858
+	},
+	{
+		"state": "QUEENSLAND",
+		"chapter": "REDLANDS",
+		"location": "Craft Brew House",
+		"address": "1/190 Birkdale Rd, Birkdale QLD 4159",
+		"latitude": -27.4922174,
+		"longitude": 153.2177931
+	},
+	{
+		"state": "QUEENSLAND",
+		"chapter": "ROCKHAMPTON",
+		"location": "CocoBrew",
+		"address": "114 William Street Rockhampton QLD 4700",
+		"latitude": -23.3824537,
+		"longitude": 150.5102803
+	},
+	{
+		"state": "SOUTH AUSTRALIA",
+		"chapter": "ADELAIDE",
+		"location": "The Exeter Hotel",
+		"address": "246 Rundle St, Adelaide SA 5000",
+		"latitude": -34.922385,
+		"longitude": 138.608789
+	},
+	{
+		"state": "TASMANIA",
+		"chapter": "CYGNET",
+		"location": "Commercial Hotel- Starting NOV 2023",
+		"address": "2 Mary St, Cygnet TAS 7112",
+		"latitude": -43.1628663,
+		"longitude": 147.0791259
+	},
+	{
+		"state": "TASMANIA",
+		"chapter": "DEVONPORT",
+		"location": "Alexander Hotel",
+		"address": "78 Formby Rd, Devonport TAS 7310",
+		"latitude": -41.1808003,
+		"longitude": 146.3626936
+	},
+	{
+		"state": "TASMANIA",
+		"chapter": "HOBART",
+		"location": "Deep South Brewing Co.",
+		"address": "220 Argyle St, North Hobart TAS 7000",
+		"latitude": -42.8751325,
+		"longitude": 147.3208706
+	},
+	{
+		"state": "TASMANIA",
+		"chapter": "KINGSTON",
+		"location": "Robbie Brown's",
+		"address": "32 Osborne Esplanade, Kingston Beach TAS 7050",
+		"latitude": -42.9813916,
+		"longitude": 147.3243683
+	},
+	{
+		"state": "TASMANIA",
+		"chapter": "LAUNCESTON",
+		"location": "Cock'n'Bull British Pub",
+		"address": "50 Wellington St, Launceston TAS 7250",
+		"latitude": -41.4409988,
+		"longitude": 147.1371067
+	},
+	{
+		"state": "VICTORIA",
+		"chapter": "ALTONA",
+		"location": "Hopheads",
+		"address": "78 Pier St, Altona VIC 3018",
+		"latitude": -37.8679879,
+		"longitude": 144.8306488
+	},
+	{
+		"state": "VICTORIA",
+		"chapter": "BALLARAT SOUTH",
+		"location": "Aunty Jacks",
+		"address": "315-317 Mair St, Ballarat Central VIC 3350",
+		"latitude": -37.5597103,
+		"longitude": 143.855902
+	},
+	{
+		"state": "VICTORIA",
+		"chapter": "BALLARAT NORTH",
+		"location": "North Britain Hotel",
+		"address": "502 Doveton St N, Soldiers Hill VIC 3350",
+		"latitude": -37.55057,
+		"longitude": 143.857178
+	},
+	{
+		"state": "VICTORIA",
+		"chapter": "BEECHWORTH",
+		"location": "Bridge Road Brewers",
+		"address": "Old Coach House Brewers Lane, Ford St, Beechworth VIC 3747",
+		"latitude": -36.3607062,
+		"longitude": 146.6773484
+	},
+	{
+		"state": "VICTORIA",
+		"chapter": "BENDIGO",
+		"location": "Wine Bank On View",
+		"address": "45 View St, Bendigo VIC 3550",
+		"latitude": -36.758664,
+		"longitude": 144.277136
+	},
+	{
+		"state": "VICTORIA",
+		"chapter": "BRIAGOLONG",
+		"location": "Briagolong RSL",
+		"address": "61 Avon St, Briagolong VIC 3860",
+		"latitude": -37.8440715,
+		"longitude": 147.0748311
+	},
+	{
+		"state": "VICTORIA",
+		"chapter": "BRIGHT",
+		"location": "Bright Brewery",
+		"address": "121 Great Alpine Rd, Bright VIC 3741",
+		"latitude": -36.726437,
+		"longitude": 146.9618432
+	},
+	{
+		"state": "VICTORIA",
+		"chapter": "BRUNSWICK",
+		"location": "The Bergy Seltzer (upstairs)",
+		"address": "68 Sydney Rd, Brunswick VIC 3056",
+		"latitude": -37.7762845,
+		"longitude": 144.9581892
+	},
+	{
+		"state": "VICTORIA",
+		"chapter": "BRUNSWICK EAST",
+		"location": "The Lomond Hotel",
+		"address": "225 Nicholson St, Brunswick East VIC 3057",
+		"latitude": -37.767203,
+		"longitude": 144.980069
+	},
+	{
+		"state": "VICTORIA",
+		"chapter": "CAMBERWELL",
+		"location": "East of Everything",
+		"address": "3/72 Auburn Parade, Camberwell VIC 3124",
+		"latitude": -37.8267881,
+		"longitude": 145.0571544
+	},
+	{
+		"state": "VICTORIA",
+		"chapter": "CASTLEMAINE",
+		"location": "Shedshaker Brewing Company",
+		"address": "9 Walker St, Castlemaine VIC 3450",
+		"latitude": -37.0560783,
+		"longitude": 144.2142044
+	},
+	{
+		"state": "VICTORIA",
+		"chapter": "CAULFIELD",
+		"location": "Racecourse Hotel",
+		"address": "895 Princes Hwy Service Rd, Malvern East VIC 3145",
+		"latitude": -37.8758962,
+		"longitude": 145.0455644
+	},
+	{
+		"state": "VICTORIA",
+		"chapter": "COBURG",
+		"location": "Coburg RSL",
+		"address": "323 Sydney Rd, Coburg VIC 3058",
+		"latitude": -37.7459487,
+		"longitude": 144.9624519
+	},
+	{
+		"state": "VICTORIA",
+		"chapter": "COLLINGWOOD ORIGINAL",
+		"location": "Goldy's! Tavern and Cafe",
+		"address": "66A Gold St, Collingwood VIC 3066",
+		"latitude": -37.7965037,
+		"longitude": 144.9898376
+	},
+	{
+		"state": "VICTORIA",
+		"chapter": "DIAMOND CREEK",
+		"location": "Golden Hills Brewery",
+		"address": "25 Station St, Diamond Creek VIC 3089",
+		"latitude": -37.672957,
+		"longitude": 145.157676
+	},
+	{
+		"state": "VICTORIA",
+		"chapter": "DROUIN",
+		"location": "The Royal Hotel",
+		"address": "2-4 Main South Road, Drouin VIC 3818",
+		"latitude": -38.137867,
+		"longitude": 145.8560021
+	},
+	{
+		"state": "VICTORIA",
+		"chapter": "ELTHAM",
+		"location": "Platform 3095",
+		"address": "965 Main Rd, Eltham VIC 3095",
+		"latitude": -37.713621,
+		"longitude": 145.148104
+	},
+	{
+		"state": "VICTORIA",
+		"chapter": "FOOTSCRAY",
+		"location": "Bar Josephine",
+		"address": "295 Barkly St, Footscray VIC 3011",
+		"latitude": -37.799309,
+		"longitude": 144.894355
+	},
+	{
+		"state": "VICTORIA",
+		"chapter": "FRANKSTON",
+		"location": "The Hop Shop",
+		"address": "26 Playne St, Frankston VIC 3199",
+		"latitude": -38.1448416,
+		"longitude": 145.121712
+	},
+	{
+		"state": "VICTORIA",
+		"chapter": "GEELONG",
+		"location": "Malt Shovel Taphouse Geelong",
+		"address": "7-21 Bellerine St, Geelong VIC 3220",
+		"latitude": -38.1483781,
+		"longitude": 144.3661784
+	},
+	{
+		"state": "VICTORIA",
+		"chapter": "HAMILTON",
+		"location": "Commercial Hotel",
+		"address": "64 Lonsdale St, Hamilton VIC 3300",
+		"latitude": -37.7424785,
+		"longitude": 142.025679
+	},
+	{
+		"state": "VICTORIA",
+		"chapter": "HAWTHORN",
+		"location": "Auburn Hotel",
+		"address": "85 Auburn Rd, Hawthorn East VIC 3122",
+		"latitude": -37.8217212,
+		"longitude": 145.0454133
+	},
+	{
+		"state": "VICTORIA",
+		"chapter": "HEYFIELD",
+		"location": "Heyfield Railway Hotel",
+		"address": "24 George Street, Heyfield VIC 3858",
+		"latitude": -37.980736,
+		"longitude": 146.78706
+	},
+	{
+		"state": "VICTORIA",
+		"chapter": "MELBOURNE CITY",
+		"location": "Royal Melbourne Hotel",
+		"address": "629 Bourke St, Melbourne VIC 3000",
+		"latitude": -37.816868,
+		"longitude": 144.955231
+	},
+	{
+		"state": "VICTORIA",
+		"chapter": "MORNINGTON",
+		"location": "Mr Paul's Beer & Wine",
+		"address": "11/234 Main Street (Vale Arcade) Mornington VIC 3931",
+		"latitude": -38.2226178,
+		"longitude": 144.9585601
+	},
+	{
+		"state": "VICTORIA",
+		"chapter": "NORTHCOTE",
+		"location": "The Merri Creek Tavern",
+		"address": "111 High St, Northcote VIC 3070",
+		"latitude": -37.7794461,
+		"longitude": 144.9968486
+	},
+	{
+		"state": "VICTORIA",
+		"chapter": "PAKENHAM",
+		"location": "Castello's Cardinia Hotel",
+		"address": "108-110 Princes Hwy, Pakenham VIC 3810",
+		"latitude": -38.0707282,
+		"longitude": 145.4769539
+	},
+	{
+		"state": "VICTORIA",
+		"chapter": "PASCOE VALE",
+		"location": "Pascoe Vale RSL",
+		"address": "40 Cumberland Rd, Pascoe Vale VIC 3044",
+		"latitude": -37.7347048,
+		"longitude": 144.9384815
+	},
+	{
+		"state": "VICTORIA",
+		"chapter": "PHILLIP ISLAND",
+		"location": "North Pier Hotel",
+		"address": "5 The Esplanade, Cowes VIC 3922",
+		"latitude": -38.4482028,
+		"longitude": 145.2415028
+	},
+	{
+		"state": "VICTORIA",
+		"chapter": "POINT COOK",
+		"location": "Hopheads Point Cook",
+		"address": "2/13 Adelphi Blvd, Point Cook VIC 3030",
+		"latitude": -37.8991108,
+		"longitude": 144.7399683
+	},
+	{
+		"state": "VICTORIA",
+		"chapter": "PRESTON",
+		"location": "Audacious Monk Cellars",
+		"address": "128-130 Regent St, Preston VIC 3072",
+		"latitude": -37.8217212,
+		"longitude": 145.0454133
+	},
+	{
+		"state": "VICTORIA",
+		"chapter": "RESERVOIR",
+		"location": "Ragtime Tavern",
+		"address": "206 Tyler St, Preston VIC 3072",
+		"latitude": -37.7310256,
+		"longitude": 145.0142057
+	},
+	{
+		"state": "VICTORIA",
+		"chapter": "SALE",
+		"location": "The Gippsland Hotel (Reading Room)",
+		"address": "153 York St, Sale VIC 3850",
+		"latitude": -38.1074371,
+		"longitude": 147.0678863
+	},
+	{
+		"state": "VICTORIA",
+		"chapter": "SOUTH BARWON",
+		"location": "Belmont Hotel",
+		"address": "77 High St Belmont 3216",
+		"latitude": -38.1714058,
+		"longitude": 144.3468976
+	},
+	{
+		"state": "VICTORIA",
+		"chapter": "SOUTHBANK VIC",
+		"location": "Hophaus",
+		"address": "Address: MR5/3 Southgate Ave, Southbank VIC 3006",
+		"latitude": -37.820243,
+		"longitude": 144.965657
+	},
+	{
+		"state": "VICTORIA",
+		"chapter": "ST. KILDA",
+		"location": "The Local Taphouse",
+		"address": "184 Carlisle St, St Kilda East VIC 3183",
+		"latitude": -37.8681208,
+		"longitude": 144.989994
+	},
+	{
+		"state": "VICTORIA",
+		"chapter": "SURF COAST",
+		"location": "4 Pines Brewing Co.",
+		"address": "Shop 1/61 Surf Coast Hwy, Torquay VIC 3228",
+		"latitude": -38.3263529,
+		"longitude": 144.316991
+	},
+	{
+		"state": "VICTORIA",
+		"chapter": "WARRANDYTE",
+		"location": "The Grand Hotel Warrandyte",
+		"address": "110 Yarra St, Warrandyte VIC 3113",
+		"latitude": -37.7384361,
+		"longitude": 145.218625
+	},
+	{
+		"state": "VICTORIA",
+		"chapter": "WARRAGUL",
+		"location": "Railway Hotel",
+		"address": "81 Queen St, Warragul VIC 3820",
+		"latitude": -38.1636519,
+		"longitude": 145.9315659
+	},
+	{
+		"state": "VICTORIA",
+		"chapter": "WILLIAMSTOWN",
+		"location": "Customs House Hotel",
+		"address": "161 Nelson Pl, Williamstown VIC 3016",
+		"latitude": -37.863157,
+		"longitude": 144.903962
+	},
+	{
+		"state": "VICTORIA",
+		"chapter": "WINDSOR",
+		"location": "Prahran Hotel",
+		"address": "82 High St, Windsor VIC 3181",
+		"latitude": -37.8514384,
+		"longitude": 144.9884723
+	},
+	{
+		"state": "VICTORIA",
+		"chapter": "YARRAVILLE",
+		"location": "Railway Hotel",
+		"address": "35 Anderson St, Yarraville VIC 3013",
+		"latitude": -37.816781,
+		"longitude": 144.890697
+	},
+	{
+		"state": "WESTERN AUSTRALIA",
+		"chapter": "BRIDGETOWN",
+		"location": "Bridgetown Hotel",
+		"address": "157 Hampton St, Bridgetown WA 6255",
+		"latitude": -33.9577153,
+		"longitude": 116.1370922
+	},
+	{
+		"state": "WESTERN AUSTRALIA",
+		"chapter": "BROOME",
+		"location": "Pearlers Bar, Roebuck Bay Hotel",
+		"address": "33 Carnarvon St, Broome WA 6725",
+		"latitude": -17.9551923,
+		"longitude": 122.2409739
+	},
+	{
+		"state": "WESTERN AUSTRALIA",
+		"chapter": "MARGARET RIVER",
+		"location": "The River",
+		"address": "40 Wallcliffe Rd, Margaret River WA 6285",
+		"latitude": -33.9531302,
+		"longitude": 115.0639779
+	},
+	{
+		"state": "WESTERN AUSTRALIA",
+		"chapter": "PERTH",
+		"location": "Belgian Beer Cafe",
+		"address": "Cnr King St &, Murray St, Perth WA 6000",
+		"latitude": -31.9519197,
+		"longitude": 115.8553703
+	},
+	{
+		"state": "CANADA",
+		"chapter": "FREDERICTON, NB",
+		"location": "Lunar Rogue Pub",
+		"address": "625 King St, Fredericton, NB E3B 1E9, Canada",
+		"latitude": 45.9600516,
+		"longitude": -66.6388121
+	},
+	{
+		"state": "CANADA",
+		"chapter": "TORONTO, ON",
+		"location": "Betty's East",
+		"address": "1301 Queen St E, Toronto, ON M4L 1C2, Canada",
+		"latitude": 43.6634518,
+		"longitude": -79.3279951
+	},
+	{
+		"state": "NEW ZEALAND",
+		"chapter": "OAMARU, NZ",
+		"location": "The Last Post",
+		"address": "12 Thames Street, Oamaru, New Zealand 9400",
+		"latitude": -45.1012506,
+		"longitude": 170.9688149
+	},
+	{
+		"state": "UK",
+		"chapter": "LONDON, UK",
+		"location": "Exmouth Arms",
+		"address": "1 Starcross St, London NW1 2HR, United Kingdom",
+		"latitude": 51.5278983,
+		"longitude": -0.136694
+	},
+	{
+		"state": "USA",
+		"chapter": "CINCINNATIO, OH",
+		"location": "Three Spirits Tavern",
+		"address": "209 Fairfield Ave, Bellevue, KY 41073, United States",
+		"latitude": 39.1051285,
+		"longitude": -84.4849512
+	},
+	{
+		"state": "USA",
+		"chapter": "GREENVILLE, SC",
+		"location": "Tetrad Brewing Company",
+		"address": "603 E Stone Ave, Greenville, SC 29601, United States",
+		"latitude": 34.8584844,
+		"longitude": -82.3847449
+	},
+	{
+		"state": "USA",
+		"chapter": "NEW YORK, NY",
+		"location": "Boulton & Watt",
+		"address": "5 Avenue A, New York, NY 10009, United States",
+		"latitude": 40.72252,
+		"longitude": -73.9863608
+	},
+	{
+		"state": "USA",
+		"chapter": "PORTLAND, OR",
+		"location": "Baerlic Brewing",
+		"address": "2235 SE 11th Avenue, Portland, OR 97214, United States",
+		"latitude": 45.5066692,
+		"longitude": -122.6549444
+	},
+	{
+		"state": "USA",
+		"chapter": "SEATTLE, WA",
+		"location": "Chuck's Hop Shop Greenwood",
+		"address": "656 NW 85th St, Seattle, WA 98117, United States",
+		"latitude": 47.6908959,
+		"longitude": -122.3657854
+	}
+/*
+	{
+		"state": "",
+		"chapter": "",
+		"location": "",
+		"address": "",
+		"latitude": ,
+		"longitude": 
+	},
+*/
+];
+
+const tgbcMarkers = [];
+
+// Display all the chapters on the map
+for (let i = 0, len = tgbcChapters.length; i < len; i++) {
+	popupText = '<b>' + tgbcChapters[i]['chapter'] + '<b><br>' + tgbcChapters[i]['location'] + '<br>' + tgbcChapters[i]['address'];
+	tgbcMarkers.push(L.marker([tgbcChapters[i]['latitude'],tgbcChapters[i]['longitude']], {icon: tgbcIcon}).addTo(map).bindPopup(popupText));
+}
+
+const options = {
+  enableHighAccuracy: true,
+  timeout: 5000,
+  maximumAge: 0,
+};
+
+// create a console warning if the location is unable to be obtained
+function error(err) {
+  console.warn(`ERROR(${err.code}): ${err.message}`);
+}
+
+// get the current location
+function getLocation() {
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(showPosition, error, options);
+  } else { 
+    console.warn("Geolocation is not supported by this browser.");
+  }
+}
+
+function showPosition(position) {
+	// display the current location on the map
+	var markerLatLng = L.latLng(position.coords.latitude, position.coords.longitude);
+	map.flyTo(markerLatLng, 10);
+	const marker = L.marker([position.coords.latitude, position.coords.longitude]).addTo(map)
+		.bindPopup('<b>Current location</b>').openPopup();
+		
+	// find the closest chapter
+	let closestDistance = 9999999999;
+	let closestIndex = 0;
+	for (let i = 0, len = tgbcChapters.length; i < len; i++) {
+		// find the distance between the user and the chapter
+		var latlong = L.latLng(tgbcChapters[i]['latitude'],tgbcChapters[i]['longitude']);
+		distance = markerLatLng.distanceTo(latlong);
+		// when the distance is closer, save the distance and index
+		if (distance < closestDistance) {
+			closestDistance = distance;
+			closestIndex = i;
+		}
+	}
+	// Show the distance to the closest chapter in km (rounded to 2 decimal places)
+	closestDistance = closestDistance/1000;
+	closestDistance = Math.round(closestDistance * 100) / 100;
+	closestChapter.innerHTML = '<b>' + tgbcChapters[closestIndex]['chapter'] + '<b><br>' + tgbcChapters[closestIndex]['location'] + '<br>' + tgbcChapters[closestIndex]['address'] + '<br>' + closestDistance + ' km';
+
+	var closestLatLong = L.latLng(tgbcChapters[closestIndex]['latitude'],tgbcChapters[closestIndex]['longitude']);
+	// create a red polyline from an arrays of LatLng points
+	var polyline = L.polyline([closestLatLong, markerLatLng], {color: 'red'}).addTo(map);
+
+	// zoom the map to the polyline
+	map.fitBounds(polyline.getBounds());
+
+}
+
+</script>
+</body>
+</html>
